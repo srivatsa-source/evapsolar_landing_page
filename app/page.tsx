@@ -4,7 +4,7 @@ import { InnovationSection } from "@/components/innovation-section"
 import { SustainabilitySection } from "@/components/sustainability-section"
 import { ContactSection } from "@/components/contact-section"
 import { Footer } from "@/components/footer"
-import { DriverTour } from "@/components/ui/driver-tour"
+// ...existing code...
 import { ServicesSection } from "@/components/services-section"
 import { SavingsCalculatorSection } from "@/components/savings-calculator"
 
@@ -20,7 +20,7 @@ export default function Home() {
       <SavingsCalculatorSection />
       <ContactSection />
       <Footer />
-      <DriverTour />
+// ...existing code...
     </main>
   )
 }
