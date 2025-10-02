@@ -47,11 +47,12 @@ const translations = {
     techSpecs: "TECHNICAL SPECIFICATIONS",
     techSpecsData: [
       { label: "Charging Power:", value: "50-150 kW" },
-      { label: "Solar Capacity:", value: "100-300 kWp" },
-      { label: "Battery Storage:", value: "200-500 kWh" },
+      { label: "Solar Capacity:", value: "50-70 kWp" },
+      { label: "Battery Storage:", value: "100kWh" },
+      { label: "Grid Independence:", value: "kWh" },
       { label: "Deployment Time:", value: "<24 hours" },
       { label: "Operating Temperature:", value: "-20°C to +60°C" },
-      { label: "Grid Independence:", value: "100%" },
+      { label: "Grid Type:", value: "Hybrid"},
     ],
 
     applications: "APPLICATIONS",
