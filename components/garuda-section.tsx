@@ -15,6 +15,9 @@ const translations = {
     creativityTitle: "CREATIVITY",
     creativitySubtitle: "CASE STUDY",
     features: [
+      "Solar Capacity: 50-70kWp",
+      "Battery Storage: 100kWh",
+      "Grid-Hybrid",
       "No Grid Connection • No Construction • Deploy in <24 hrs",
       "AI-Optimized Solar Microgrids",
       "Predictive Energy Forecasting",
@@ -38,6 +41,9 @@ const translations = {
     creativityTitle: "ಸೃಜನಶೀಲತೆ",
     creativitySubtitle: "ಕೇಸ್ ಸ್ಟಡಿ",
     features: [
+      "सौर क्षमता: 50-70kWp",
+      "बैटरी भंडारण: 100kWh",
+      "ग्रिड-हाइब्रिड",
       "कोई ग्रिड कनेक्शन नहीं • कोई निर्माण नहीं • 24 घंटे में तैनाती",
       "एआई-अनुकूलित सौर माइक्रोग्रिड",
       "भविष्यसूचक ऊर्जा पूर्वानुमान",
@@ -61,6 +67,9 @@ const translations = {
     creativityTitle: "ಸೃಜನಶೀಲತೆ",
     creativitySubtitle: "ಕೇಸ್ ಸ್ಟಡಿ",
     features: [
+      "ಸೌರ ಸಾಮರ್ಥ್ಯ: 50-70kWp",
+      "ಬ್ಯಾಟರಿ ಸಂಗ್ರಹ: 100kWh",
+      "ಗ್ರಿಡ್-ಹೈಬ್ರಿಡ್",
       "ಗ್ರಿಡ್ ಸಂಪರ್ಕವಿಲ್ಲ • ನಿರ್ಮಾಣವಿಲ್ಲ • 24 ಗಂಟೆಗಳಲ್ಲಿ ನಿಯೋಜನೆ",
       "ಎಐ-ಅನುಕೂಲಿತ ಸೌರ ಮೈಕ್ರೋಗ್ರಿಡ್‌ಗಳು",
       "ಭವಿಷ್ಯಸೂಚಕ ಶಕ್ತಿ ಮುನ್ನೋಟ",
