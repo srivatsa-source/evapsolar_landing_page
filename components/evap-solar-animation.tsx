@@ -234,7 +234,7 @@ const EvapSolarAnimation = ({
               }}
             >
               <span className="inline-block transform transition-all duration-300 hover:scale-110">
-                E
+                e
               </span>
               <span
                 className="inline-block transform transition-all ease-out"
@@ -263,7 +263,7 @@ const EvapSolarAnimation = ({
               }}
             >
               <span className="inline-block transform transition-all duration-300 hover:scale-110">
-                S
+                s
               </span>
               <span
                 className="inline-block transform transition-all ease-out"
