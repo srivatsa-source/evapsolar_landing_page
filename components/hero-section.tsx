@@ -23,26 +23,38 @@ const translations = {
     tagline: "WE POWER THE WORLD WITHOUT BURNING IT",
     heroTitle1: "EVAPSOLAR",
     subtitle: "WE POWER THE WORLD WITHOUT BURNING IT",
+    logoAlt: "EVAP Solar Logo - Sustainable Energy Solutions",
+    backgroundVideoAlt: "Clean energy infrastructure background video",
   },
   hi: {
     tagline: "हम दुनिया को जलाए बिना शक्ति देते हैं",
     heroTitle1: "EVAPSOLAR",
     subtitle: "हम दुनिया को जलाए बिना शक्ति देते हैं",
+    logoAlt: "EVAP सोलर लोगो - स्थायी ऊर्जा समाधान",
+    backgroundVideoAlt: "स्वच्छ ऊर्जा अवसंरचना पृष्ठभूमि वीडियो",
   },
   kn: {
     tagline: "ನಾವು ಜಗತ್ತನ್ನು ಸುಡದೆ ಶಕ್ತಿ ನೀಡುತ್ತೇವೆ",
     heroTitle1: "EVAPSOLAR",
     subtitle: "ನಾವು ಜಗತ್ತನ್ನು ಸುಡದೆ ಶಕ್ತಿ ನೀಡುತ್ತೇವೆ",
+    logoAlt: "EVAP ಸೋಲಾರ್ ಲೋಗೋ - ಸಮರ್ಥನೀಯ ಶಕ್ತಿ ಪರಿಹಾರಗಳು",
+    backgroundVideoAlt: "ಶುದ್ಧ ಶಕ್ತಿ ಮೂಲಸೌಕರ್ಯ ಹಿನ್ನೆಲೆ ವೀಡಿಯೋ",
   },
 };
 
 export function HeroSection() {
-  const [showStartup, setShowStartup] = useState(true);
+  const [showStartup, setShowStartup] = useState(false);
   const [currentLang, setCurrentLang] = useState("en");
 
   useEffect(() => {
     const savedLang = localStorage.getItem("language") || "en";
     setCurrentLang(savedLang);
+
+    // Check if startup animation has been shown in this session
+    const hasShownStartup = sessionStorage.getItem("hasShownStartup");
+    if (!hasShownStartup) {
+      setShowStartup(true);
+    }
 
     const handleLanguageChange = (event: CustomEvent) => {
       setCurrentLang(event.detail.language);
@@ -61,7 +73,28 @@ export function HeroSection() {
 
   const handleAnimationComplete = () => {
     setShowStartup(false);
+    // Mark startup animation as shown for this session
+    sessionStorage.setItem("hasShownStartup", "true");
   };
+
+  // Utility function to reset startup animation (for debugging)
+  const resetStartupAnimation = () => {
+    sessionStorage.removeItem("hasShownStartup");
+    setShowStartup(true);
+  };
+
+  // Make resetStartupAnimation available globally for debugging
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).resetStartupAnimation = resetStartupAnimation;
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        delete (window as any).resetStartupAnimation;
+      }
+    };
+  }, []);
 
   const currentTranslation =
     translations[currentLang as keyof typeof translations] || translations.en;
@@ -113,7 +146,7 @@ export function HeroSection() {
           >
             <Image
               src="/evap logo.png"
-              alt="EVAP Solar Logo"
+              alt={currentTranslation.logoAlt}
               width={800}
               height={400}
               className="w-auto h-20 sm:h-24 md:h-32 lg:h-40 antialiased"

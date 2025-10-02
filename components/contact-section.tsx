@@ -1,9 +1,12 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { ScrollReveal, FloatingElement } from "@/components/ui/floating-elements"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  ScrollReveal,
+  FloatingElement,
+} from "@/components/ui/floating-elements";
 
 const translations = {
   en: {
@@ -23,7 +26,8 @@ const translations = {
     contactInfo: {
       email: "info@evapsolar.com",
       phone: "+91 7795 101714",
-      address: "JAIN GLOBAL CAMPUS.",
+      address:
+        "No. 3, 10th Cross, Bhuvaneshwari Nagar, Banashankari 3rd Stage, Bangalore 560-085",
       hours: "Mon - Fri: 9:00 AM - 6:00 PM\nSat - Sun: By Appointment",
     },
   },
@@ -44,7 +48,8 @@ const translations = {
     contactInfo: {
       email: "info@evapsolar.com",
       phone: "+91 7795 101714",
-      address: "JAIN GLOBAL CAMPUS.",
+      address:
+        "No. 3, 10th Cross, Bhuvaneshwari Nagar, Banashankari 3rd Stage, Bangalore 560-085",
       hours: "सोम - शुक्र: 9:00 AM - 6:00 PM\nशनि - रवि: अपॉइंटमेंट द्वारा",
     },
   },
@@ -65,11 +70,12 @@ const translations = {
     contactInfo: {
       email: "info@evapsolar.com",
       phone: "+91 7795 101714",
-      address: "JAIN GLOBAL CAMPUS.",
+      address:
+        "No. 3, 10th Cross, Bhuvaneshwari Nagar, Banashankari 3rd Stage, Bangalore 560-085",
       hours: "ಸೋಮ - ಶುಕ್ರ: 9:00 AM - 6:00 PM\nಶನಿ - ಭಾನು: ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಮೂಲಕ",
     },
   },
-}
+};
 
 export function ContactSection() {
   const [formData, setFormData] = useState({
@@ -77,38 +83,55 @@ export function ContactSection() {
     company: "",
     email: "",
     message: "",
-  })
-  const [currentLang, setCurrentLang] = useState("en")
+  });
+  const [currentLang, setCurrentLang] = useState("en");
 
   useEffect(() => {
-    const savedLang = localStorage.getItem("language") || "en"
-    setCurrentLang(savedLang)
+    const savedLang = localStorage.getItem("language") || "en";
+    setCurrentLang(savedLang);
 
     const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLang(event.detail.language)
-    }
+      setCurrentLang(event.detail.language);
+    };
 
-    window.addEventListener("languageChange", handleLanguageChange as EventListener)
-    return () => window.removeEventListener("languageChange", handleLanguageChange as EventListener)
-  }, [])
+    window.addEventListener(
+      "languageChange",
+      handleLanguageChange as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        "languageChange",
+        handleLanguageChange as EventListener
+      );
+  }, []);
 
-  const currentTranslation = translations[currentLang as keyof typeof translations] || translations.en
+  const currentTranslation =
+    translations[currentLang as keyof typeof translations] || translations.en;
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Form submitted:", formData)
-  }
+    e.preventDefault();
+    console.log("Form submitted:", formData);
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }))
-  }
+    }));
+  };
 
   return (
-    <section id="contact" className="min-h-screen flex items-center py-20 relative bg-black">
-      <FloatingElement delay={1} amplitude={6} className="absolute top-20 right-10 opacity-10">
+    <section
+      id="contact"
+      className="min-h-screen flex items-center py-20 relative bg-black"
+    >
+      <FloatingElement
+        delay={1}
+        amplitude={6}
+        className="absolute top-20 right-10 opacity-10"
+      >
         <div className="w-1 h-1 bg-white rounded-full" />
       </FloatingElement>
 
@@ -123,25 +146,33 @@ export function ContactSection() {
           {/* Contact Information */}
           <ScrollReveal delay={0.4}>
             <div className="space-y-8">
-              <h3 className="text-xl font-mono mb-8 text-white tracking-wider">{currentTranslation.getInTouch}</h3>
+              <h3 className="text-xl font-mono mb-8 text-white tracking-wider">
+                {currentTranslation.getInTouch}
+              </h3>
               <div className="space-y-6">
                 <div>
                   <h4 className="text-sm uppercase tracking-wider text-white/40 mb-2 font-mono">
                     {currentTranslation.email}
                   </h4>
-                  <p className="text-white font-mono">{currentTranslation.contactInfo.email}</p>
+                  <p className="text-white font-mono">
+                    {currentTranslation.contactInfo.email}
+                  </p>
                 </div>
                 <div>
                   <h4 className="text-sm uppercase tracking-wider text-white/40 mb-2 font-mono">
                     {currentTranslation.phone}
                   </h4>
-                  <p className="text-white font-mono">{currentTranslation.contactInfo.phone}</p>
+                  <p className="text-white font-mono">
+                    {currentTranslation.contactInfo.phone}
+                  </p>
                 </div>
                 <div>
                   <h4 className="text-sm uppercase tracking-wider text-white/40 mb-2 font-mono">
                     {currentTranslation.address}
                   </h4>
-                  <p className="text-white font-mono whitespace-pre-line">{currentTranslation.contactInfo.address}</p>
+                  <p className="text-white font-mono whitespace-pre-line">
+                    {currentTranslation.contactInfo.address}
+                  </p>
                 </div>
               </div>
             </div>
@@ -212,5 +243,5 @@ export function ContactSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

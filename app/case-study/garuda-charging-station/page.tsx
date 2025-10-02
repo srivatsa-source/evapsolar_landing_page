@@ -3,9 +3,12 @@
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { useState, useEffect, useRef } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const translations = {
   en: {
+    backButton: "Back to Services",
     title: "GARUDA CHARGING HUB",
     subtitle:
       "Grid-free Autonomous Renewable energy-powered Ultra-fast Direct-charging for Automobiles",
@@ -64,6 +67,7 @@ const translations = {
 };
 
 export default function GarudaChargingHubCaseStudy() {
+  const router = useRouter();
   const [currentLang, setCurrentLang] = useState("en");
   const [visibleSections, setVisibleSections] = useState<string[]>([]);
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -105,7 +109,18 @@ export default function GarudaChargingHubCaseStudy() {
   return (
     <main className="bg-black text-white min-h-screen font-mono">
       <Navigation />
-
+      {/* Fixed Back to Home Button */}
+      <div className="fixed top-20 left-4 z-50">
+        <button
+          onClick={() => {
+            console.log("Back button clicked");
+            window.location.href = "/";
+          }}
+          className="inline-flex items-center justify-center w-12 h-12 bg-black/80 backdrop-blur-sm border border-white/20 rounded-full text-white/70 hover:text-white hover:bg-black/90 transition-all duration-200 cursor-pointer shadow-lg"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+      </div>{" "}
       {/* Hero Section */}
       <section
         className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden"
@@ -130,7 +145,6 @@ export default function GarudaChargingHubCaseStudy() {
           </p>
         </div>
       </section>
-
       {/* Custom CSS Animations */}
       <style jsx>{`
         @keyframes fadeInUp {
@@ -235,7 +249,6 @@ export default function GarudaChargingHubCaseStudy() {
           }
         }
       `}</style>
-
       {/* Content Sections */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
@@ -711,7 +724,6 @@ export default function GarudaChargingHubCaseStudy() {
           </div>
         </div>
       </section>
-
       <Footer />
     </main>
   );

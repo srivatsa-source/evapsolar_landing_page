@@ -5,9 +5,12 @@ import { Footer } from "@/components/footer"
 import { ScrollReveal, FloatingElement } from "@/components/ui/floating-elements"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { ArrowLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 const translations = {
   en: {
+    backButton: "Back to Services",
     title: "AUTONOMOUS CHARGING SYSTEM",
     subtitle: "SELF-MANAGING EV INFRASTRUCTURE",
     overview: "OVERVIEW",
@@ -41,6 +44,7 @@ const translations = {
     ],
   },
   hi: {
+    backButton: "सेवाओं पर वापस जाएं",
     title: "स्वायत्त चार्जिंग सिस्टम",
     subtitle: "स्व-प्रबंधित ईवी अवसंरचना",
     overview: "अवलोकन",
@@ -68,6 +72,7 @@ const translations = {
     applicationsList: ["स्वायत्त वाहन बेड़े", "स्मार्ट पार्किंग गैरेज", "हाईवे सेवा केंद्र", "कॉर्पोरेट परिसर", "आवासीय परिसर"],
   },
   kn: {
+    backButton: "ಸೇವೆಗಳಿಗೆ ಹಿಂತಿರುಗಿ",
     title: "ಸ್ವಾಯತ್ತ ಚಾರ್ಜಿಂಗ್ ಸಿಸ್ಟಂ",
     subtitle: "ಸ್ವಯಂ-ನಿರ್ವಹಣೆ ಇವಿ ಮೂಲಸೌಕರ್ಯ",
     overview: "ಅವಲೋಕನ",
@@ -103,6 +108,7 @@ const translations = {
 }
 
 export default function AutonomousChargingCaseStudy() {
+  const router = useRouter()
   const [currentLang, setCurrentLang] = useState("en")
 
   useEffect(() => {
@@ -132,6 +138,19 @@ export default function AutonomousChargingCaseStudy() {
         </FloatingElement>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
+          {/* Fixed Back to Home Button */}
+          <div className="fixed top-20 left-4 z-50">
+            <button
+              onClick={() => {
+                console.log('Back button clicked');
+                window.location.href = '/';
+              }}
+              className="inline-flex items-center justify-center w-12 h-12 bg-black/80 backdrop-blur-sm border border-white/20 rounded-full text-white/70 hover:text-white hover:bg-black/90 transition-all duration-200 cursor-pointer shadow-lg"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </div>
+
           <ScrollReveal delay={0.2}>
             <motion.div
               className="text-center mb-16"

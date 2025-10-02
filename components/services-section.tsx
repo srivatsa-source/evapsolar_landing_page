@@ -1,23 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   ScrollReveal,
   FloatingElement,
 } from "@/components/ui/floating-elements";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-
-const Perovskite2D = dynamic(() => import("@/components/3d/perovskite-2d"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-72 bg-black/20 rounded-2xl flex items-center justify-center">
-      <div className="text-white font-mono text-sm tracking-wider">
-        Loading Perovskite Structure...
-      </div>
-    </div>
-  ),
-});
 
 export function ServicesSection() {
   const router = useRouter();
@@ -28,10 +16,63 @@ export function ServicesSection() {
   const [clickedIdx, setClickedIdx] = useState<number | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [activatedPanel, setActivatedPanel] = useState<string | null>(null);
+  const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
+
+  // Utility function to clear visited pages (for debugging)
+  const clearVisitedPages = useCallback(() => {
+    setVisitedPages(new Set());
+    sessionStorage.removeItem("visitedPages");
+  }, []);
 
   useEffect(() => {
     const savedLang = localStorage.getItem("language") || "en";
     setCurrentLang(savedLang);
+
+    // Load visited pages from sessionStorage (resets when tab/browser closes)
+    const savedVisitedPages = sessionStorage.getItem("visitedPages");
+    if (savedVisitedPages) {
+      try {
+        setVisitedPages(new Set(JSON.parse(savedVisitedPages)));
+      } catch (error) {
+        console.error("Error parsing visited pages:", error);
+        setVisitedPages(new Set());
+      }
+    }
+
+    // Restore active panel state when returning to home page to maintain sub-options
+    const savedActivePanel = sessionStorage.getItem("activePanel");
+    if (
+      savedActivePanel &&
+      (savedActivePanel === "EPC" ||
+        savedActivePanel === "OEM" ||
+        savedActivePanel === "R & D")
+    ) {
+      try {
+        setActivePanel(savedActivePanel as "EPC" | "OEM" | "R & D");
+      } catch (error) {
+        console.error("Error restoring active panel:", error);
+        sessionStorage.removeItem("activePanel");
+      }
+    }
+
+    // Restore scroll position when returning to home page
+    const restoreScrollPosition = () => {
+      const savedScrollPosition = sessionStorage.getItem("homeScrollPosition");
+      if (savedScrollPosition) {
+        const scrollY = parseInt(savedScrollPosition, 10);
+        // Small delay to ensure page is fully loaded
+        setTimeout(() => {
+          window.scrollTo({ top: scrollY, behavior: "smooth" });
+        }, 100);
+      }
+    };
+
+    // Check if we're returning from a navigation (detect back button or direct return)
+    const hasNavigationHistory = sessionStorage.getItem("homeScrollPosition");
+    if (hasNavigationHistory && window.history.length > 1) {
+      restoreScrollPosition();
+    }
+
     const handleLanguageChange = (event: CustomEvent) => {
       setCurrentLang((event as any).detail.language);
     };
@@ -46,6 +87,8 @@ export function ServicesSection() {
       };
       if (detail?.panel) {
         setActivePanel(detail.panel);
+        // Save active panel state in sessionStorage to maintain sub-options
+        sessionStorage.setItem("activePanel", detail.panel);
         // bring services into view first
         const servicesEl = document.getElementById("services");
         if (servicesEl)
@@ -68,6 +111,21 @@ export function ServicesSection() {
       handleOpenPanel as EventListener
     );
 
+    // Handle page visibility to clear scroll position when user leaves entirely
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        // Only clear if we're not navigating within the same app
+        const isInternalNavigation =
+          sessionStorage.getItem("internalNavigation");
+        if (!isInternalNavigation) {
+          sessionStorage.removeItem("homeScrollPosition");
+          sessionStorage.removeItem("activePanel");
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       window.removeEventListener(
         "languageChange",
@@ -77,8 +135,24 @@ export function ServicesSection() {
         "openServicePanel",
         handleOpenPanel as EventListener
       );
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  // Separate useEffect for global function assignment
+  useEffect(() => {
+    // Make clearVisitedPages available globally for debugging
+    if (typeof window !== "undefined") {
+      (window as any).clearVisitedPages = clearVisitedPages;
+    }
+
+    return () => {
+      // Clean up global function
+      if (typeof window !== "undefined") {
+        delete (window as any).clearVisitedPages;
+      }
+    };
+  }, [clearVisitedPages]);
 
   const epcTranslations = {
     en: {
@@ -243,7 +317,7 @@ export function ServicesSection() {
     },
     {
       title: "OEM",
-      subtitle: "Original Equipment Manufacturers",
+      subtitle: "Original Equipment Manufacturing",
       image: "/solar-module-manufacturing.jpg",
     },
     {
@@ -267,9 +341,15 @@ export function ServicesSection() {
       setTimeout(() => setActivatedPanel(null), 400);
     }
 
-    setActivePanel((curr: "EPC" | "OEM" | "R & D" | null) =>
-      curr === panel ? null : panel
-    );
+    const newActivePanel = activePanel === panel ? null : panel;
+    setActivePanel(newActivePanel);
+
+    // Save or clear active panel state in sessionStorage to maintain sub-options
+    if (newActivePanel) {
+      sessionStorage.setItem("activePanel", newActivePanel);
+    } else {
+      sessionStorage.removeItem("activePanel");
+    }
 
     if (isOpening) {
       setTimeout(() => {
@@ -279,19 +359,52 @@ export function ServicesSection() {
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-      }, 50);
+      }, 30);
     }
   };
 
-  const handleNavigation = async (path: string) => {
-    setIsNavigating(true);
-    try {
-      await router.push(path);
-    } catch (error) {
-      console.error("Navigation error:", error);
-    } finally {
-      setIsNavigating(false);
+  const handleNavigation = (path: string) => {
+    // Save current scroll position before navigating
+    const currentScrollY = window.scrollY;
+    sessionStorage.setItem("homeScrollPosition", currentScrollY.toString());
+
+    // Save active panel state before navigating to preserve sub-options
+    if (activePanel) {
+      sessionStorage.setItem("activePanel", activePanel);
     }
+
+    // Check if page has been visited before
+    const hasVisited = visitedPages.has(path);
+
+    if (!hasVisited) {
+      // Mark page as visited immediately
+      const updatedVisited = new Set(visitedPages);
+      updatedVisited.add(path);
+      setVisitedPages(updatedVisited);
+      sessionStorage.setItem(
+        "visitedPages",
+        JSON.stringify(Array.from(updatedVisited))
+      );
+
+      // Show brief loading animation only for first visit
+      setIsNavigating(true);
+
+      // Reset loading state quickly
+      setTimeout(() => {
+        setIsNavigating(false);
+      }, 200);
+    }
+
+    // Mark as internal navigation to preserve scroll position
+    sessionStorage.setItem("internalNavigation", "true");
+
+    // Navigate to the page immediately for better perceived performance
+    router.push(path);
+
+    // Clear the flag after navigation
+    setTimeout(() => {
+      sessionStorage.removeItem("internalNavigation");
+    }, 1000);
   };
 
   const handleSolarTypeClick = (type: "rooftop" | "ground" | "tinshed") => {
@@ -316,13 +429,13 @@ export function ServicesSection() {
     handleNavigation(productMap[product]);
   };
 
-  const handleRnDClick = (section: "tandem" | "perovskite") => {
-    if (section === "tandem") {
-      // Navigate to autonomous charging case study which shows advanced R&D
-      handleNavigation("/case-study/autonomous-charging");
-    } else {
-      // No action needed for perovskite - remove alert
-      console.log("Perovskite structure selected");
+  const handleRnDClick = (section: "solar-cells" | "zinc-batteries") => {
+    if (section === "solar-cells") {
+      // Navigate to solar cells research page
+      handleNavigation("/case-study/solar-cells");
+    } else if (section === "zinc-batteries") {
+      // Navigate to zinc-ion batteries research page
+      handleNavigation("/case-study/zinc-batteries");
     }
   };
 
@@ -381,6 +494,7 @@ export function ServicesSection() {
             {cards.map((c, idx) => (
               <button
                 key={idx}
+                id={`service-card-${c.title.replace(/\s+/g, "").toLowerCase()}`}
                 type="button"
                 onClick={() =>
                   togglePanel(c.title as "EPC" | "OEM" | "R & D", idx)
@@ -460,17 +574,22 @@ export function ServicesSection() {
           {activePanel === "EPC" && (
             <div
               id="panel-epc"
-              className="panel-slide-in border border-white/20 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 backdrop-blur-sm bg-white/5 mb-8 md:mb-10 lg:mb-12 shadow-2xl relative overflow-hidden"
+              className="epc-panel-drag-expand border border-white/20 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 backdrop-blur-sm bg-white/5 mb-8 md:mb-10 lg:mb-12 shadow-2xl relative overflow-hidden"
+              style={{
+                transformOrigin: "center top",
+                animationDelay: "0.1s",
+              }}
             >
               {/* Enhanced animated background particles */}
               <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="particle-drift absolute top-8 left-8 w-2 h-2 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50"></div>
                 <div className="particle-drift absolute top-16 right-16 w-1 h-1 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50"></div>
                 <div className="particle-drift absolute bottom-16 left-16 w-1.5 h-1.5 bg-red-400 rounded-full shadow-lg shadow-red-400/50"></div>
                 <div className="particle-drift absolute bottom-8 right-8 w-1 h-1 bg-amber-400 rounded-full shadow-lg shadow-amber-400/50"></div>
-                <div className="particle-drift absolute top-1/2 left-1/4 w-1 h-1 bg-rose-400 rounded-full shadow-lg shadow-rose-400/50"></div>
-                <div className="particle-drift absolute top-1/3 right-1/3 w-0.5 h-0.5 bg-orange-300 rounded-full shadow-lg shadow-orange-300/50"></div>
+                <div className="particle-drift absolute top-1/2 left-1/4 w-1 h-1 bg-white/15 rounded-full animate-pulse"></div>
               </div>
+
+              {/* Connection line showing drag effect */}
+              <div className="epc-connection-line absolute -top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-white/30 to-transparent rounded-full"></div>
 
               <h3
                 className="content-cascade text-lg md:text-xl font-mono text-white tracking-wider mb-4 md:mb-6 relative z-10"
@@ -488,9 +607,12 @@ export function ServicesSection() {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                   <div
-                    className="content-cascade epc-card-hover epc-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105"
-                    style={{ animationDelay: "0.2s" }}
+                    className="epc-card-emerge epc-card-hover epc-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105"
+                    style={{ animationDelay: "0.3s" }}
                     onClick={() => handleSolarTypeClick("rooftop")}
+                    onMouseEnter={() =>
+                      router.prefetch("/case-study/rooftop-solar")
+                    }
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -501,19 +623,27 @@ export function ServicesSection() {
                     }}
                     aria-label="Learn more about rooftop solar installations"
                   >
-                    <img
-                      src="/rooftop-solar.jpg"
-                      alt="Rooftop solar installation"
-                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
-                      loading="lazy"
-                      decoding="async"
-                      width={640}
-                      height={160}
-                      onError={(e) => {
-                        const t = e.currentTarget as HTMLImageElement;
-                        t.src = "/placeholder.jpg";
-                      }}
-                    />
+                    <div className="relative overflow-hidden">
+                      <img
+                        src="/rooftop-solar.jpg"
+                        alt="Rooftop solar installation"
+                        className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
+                        loading="lazy"
+                        decoding="async"
+                        width={640}
+                        height={160}
+                        onError={(e) => {
+                          const t = e.currentTarget as HTMLImageElement;
+                          t.src = "/placeholder.jpg";
+                        }}
+                      />
+                      {/* Animated Energy Lines */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div className="absolute top-4 left-4 w-8 h-0.5 bg-gradient-to-r from-blue-400 to-transparent animate-pulse"></div>
+                        <div className="absolute top-8 left-4 w-6 h-0.5 bg-gradient-to-r from-green-400 to-transparent animate-pulse delay-300"></div>
+                        <div className="absolute bottom-4 right-4 w-8 h-0.5 bg-gradient-to-l from-blue-400 to-transparent animate-pulse delay-700"></div>
+                      </div>
+                    </div>
                     <div className="p-4">
                       <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
                         Rooftop
@@ -530,9 +660,12 @@ export function ServicesSection() {
                   </div>
 
                   <div
-                    className="content-cascade epc-card-hover epc-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-yellow-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105"
-                    style={{ animationDelay: "0.4s" }}
+                    className="epc-card-emerge epc-card-hover epc-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105"
+                    style={{ animationDelay: "0.5s" }}
                     onClick={() => handleSolarTypeClick("ground")}
+                    onMouseEnter={() =>
+                      router.prefetch("/case-study/ground-mounted-solar")
+                    }
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -543,19 +676,27 @@ export function ServicesSection() {
                     }}
                     aria-label="Learn more about ground mounted solar installations"
                   >
-                    <img
-                      src="/ground-mounted-solar.jpg"
-                      alt="Ground mounted solar"
-                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:-rotate-1 transition-all duration-700 group-hover:brightness-110"
-                      loading="lazy"
-                      decoding="async"
-                      width={640}
-                      height={160}
-                      onError={(e) => {
-                        const t = e.currentTarget as HTMLImageElement;
-                        t.src = "/placeholder.jpg";
-                      }}
-                    />
+                    <div className="relative overflow-hidden">
+                      <img
+                        src="/ground-mounted-solar.jpg"
+                        alt="Ground mounted solar"
+                        className="w-full h-40 object-cover group-hover:scale-110 group-hover:-rotate-1 transition-all duration-700 group-hover:brightness-110"
+                        loading="lazy"
+                        decoding="async"
+                        width={640}
+                        height={160}
+                        onError={(e) => {
+                          const t = e.currentTarget as HTMLImageElement;
+                          t.src = "/placeholder.jpg";
+                        }}
+                      />
+                      {/* Animated Energy Lines */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div className="absolute top-4 right-4 w-10 h-0.5 bg-gradient-to-l from-yellow-400 to-transparent animate-pulse"></div>
+                        <div className="absolute top-8 right-4 w-7 h-0.5 bg-gradient-to-l from-orange-400 to-transparent animate-pulse delay-200"></div>
+                        <div className="absolute bottom-4 left-4 w-9 h-0.5 bg-gradient-to-r from-green-400 to-transparent animate-pulse delay-500"></div>
+                      </div>
+                    </div>
                     <div className="p-4">
                       <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
                         Ground Mounted
@@ -571,9 +712,12 @@ export function ServicesSection() {
                   </div>
 
                   <div
-                    className="content-cascade epc-card-hover epc-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-red-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105"
-                    style={{ animationDelay: "0.6s" }}
+                    className="epc-card-emerge epc-card-hover epc-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105"
+                    style={{ animationDelay: "0.7s" }}
                     onClick={() => handleSolarTypeClick("tinshed")}
+                    onMouseEnter={() =>
+                      router.prefetch("/case-study/tin-shed-solar")
+                    }
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -584,19 +728,27 @@ export function ServicesSection() {
                     }}
                     aria-label="Learn more about tin shed solar installations"
                   >
-                    <img
-                      src="/tin-shed-solar.jpg"
-                      alt="Tin shed solar installation"
-                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
-                      loading="lazy"
-                      decoding="async"
-                      width={640}
-                      height={160}
-                      onError={(e) => {
-                        const t = e.currentTarget as HTMLImageElement;
-                        t.src = "/placeholder.jpg";
-                      }}
-                    />
+                    <div className="relative overflow-hidden">
+                      <img
+                        src="/tin-shed-solar.jpg"
+                        alt="Tin shed solar installation"
+                        className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
+                        loading="lazy"
+                        decoding="async"
+                        width={640}
+                        height={160}
+                        onError={(e) => {
+                          const t = e.currentTarget as HTMLImageElement;
+                          t.src = "/placeholder.jpg";
+                        }}
+                      />
+                      {/* Animated Energy Lines */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div className="absolute top-4 left-4 w-7 h-0.5 bg-gradient-to-r from-purple-400 to-transparent animate-pulse"></div>
+                        <div className="absolute bottom-8 right-4 w-8 h-0.5 bg-gradient-to-l from-cyan-400 to-transparent animate-pulse delay-400"></div>
+                        <div className="absolute bottom-4 left-8 w-6 h-0.5 bg-gradient-to-r from-pink-400 to-transparent animate-pulse delay-600"></div>
+                      </div>
+                    </div>
                     <div className="p-4">
                       <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
                         Tin Shed
@@ -620,16 +772,20 @@ export function ServicesSection() {
                   <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-1000 hidden"></span>
                 </h4>
                 <div
-                  className={`border-2 border-white/15 rounded-xl overflow-hidden cursor-pointer transition-all duration-500 group relative ${
+                  className={`epc-card-emerge epc-card-hover border-2 border-white/15 rounded-xl overflow-hidden cursor-pointer transition-all duration-500 group relative transform hover:-translate-y-2 hover:scale-105 ${
                     isNavigating ? "opacity-50 pointer-events-none" : ""
                   }`}
                   style={{
                     background:
                       "linear-gradient(145deg, rgba(0,0,0,0.8), rgba(0,0,0,0.9))",
                     backdropFilter: "blur(10px)",
+                    animationDelay: "0.9s",
                   }}
                   onClick={() =>
                     handleNavigation("/case-study/garuda-charging-station")
+                  }
+                  onMouseEnter={() =>
+                    router.prefetch("/case-study/garuda-charging-station")
                   }
                   role="button"
                   tabIndex={0}
@@ -722,17 +878,24 @@ export function ServicesSection() {
           {activePanel === "OEM" && (
             <div
               id="panel-oem"
-              className="panel-slide-in border border-white/20 rounded-2xl p-8 backdrop-blur-sm bg-white/5 mb-12 shadow-2xl relative overflow-hidden"
+              className="oem-panel-drag-expand border border-white/20 rounded-2xl p-8 backdrop-blur-sm bg-white/5 mb-12 shadow-2xl relative overflow-hidden"
+              style={{
+                transformOrigin: "center top",
+                animationDelay: "0.1s",
+              }}
             >
               {/* Enhanced animated background particles */}
               <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="particle-drift absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50"></div>
-                <div className="particle-drift absolute top-20 right-20 w-1 h-1 bg-green-400 rounded-full shadow-lg shadow-green-400/50"></div>
-                <div className="particle-drift absolute bottom-20 left-20 w-1.5 h-1.5 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50"></div>
-                <div className="particle-drift absolute bottom-10 right-10 w-1 h-1 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50"></div>
-                <div className="particle-drift absolute top-1/2 left-1/4 w-1 h-1 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50"></div>
-                <div className="particle-drift absolute top-1/3 right-1/3 w-0.5 h-0.5 bg-pink-400 rounded-full shadow-lg shadow-pink-400/50"></div>
+                <div className="particle-drift absolute top-10 left-10 w-2 h-2 bg-white/20 rounded-full animate-pulse"></div>
+                <div className="particle-drift absolute top-20 right-20 w-1 h-1 bg-white/15 rounded-full animate-pulse"></div>
+                <div className="particle-drift absolute bottom-20 left-20 w-1.5 h-1.5 bg-white/20 rounded-full animate-pulse"></div>
+                <div className="particle-drift absolute bottom-10 right-10 w-1 h-1 bg-white/15 rounded-full animate-pulse"></div>
+                <div className="particle-drift absolute top-1/2 left-1/4 w-1 h-1 bg-white/15 rounded-full animate-pulse"></div>
+                <div className="particle-drift absolute top-1/3 right-1/3 w-0.5 h-0.5 bg-white/10 rounded-full animate-pulse"></div>
               </div>
+
+              {/* Connection line showing drag effect */}
+              <div className="oem-connection-line absolute -top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-white/30 to-transparent rounded-full"></div>
 
               <h3
                 className="content-cascade text-xl font-mono text-white tracking-wider mb-6 relative z-10"
@@ -743,11 +906,15 @@ export function ServicesSection() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div
-                  className={`content-cascade oem-card-hover oem-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
+                  id="oem-modules-card"
+                  className={`oem-card-emerge oem-card-hover oem-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
                     isNavigating ? "opacity-50 pointer-events-none" : ""
                   }`}
-                  style={{ animationDelay: "0.2s" }}
+                  style={{ animationDelay: "0.3s" }}
                   onClick={() => handleOEMProductClick("modules")}
+                  onMouseEnter={() =>
+                    router.prefetch("/case-study/ai-microgrid")
+                  }
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -758,19 +925,27 @@ export function ServicesSection() {
                   }}
                   aria-label="View solar module manufacturing case study"
                 >
-                  <img
-                    src="/solar-module-manufacturing.jpg"
-                    alt="Solar Module Manufacturing"
-                    className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
-                    loading="lazy"
-                    decoding="async"
-                    width={640}
-                    height={160}
-                    onError={(e) => {
-                      const t = e.currentTarget as HTMLImageElement;
-                      t.src = "/placeholder.jpg";
-                    }}
-                  />
+                  <div className="relative overflow-hidden">
+                    <img
+                      src="/solar-module-manufacturing.jpg"
+                      alt="Solar Module Manufacturing"
+                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
+                      loading="lazy"
+                      decoding="async"
+                      width={640}
+                      height={160}
+                      onError={(e) => {
+                        const t = e.currentTarget as HTMLImageElement;
+                        t.src = "/placeholder.jpg";
+                      }}
+                    />
+                    {/* Animated Energy Lines */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute top-4 left-4 w-10 h-0.5 bg-gradient-to-r from-indigo-400 to-transparent animate-pulse"></div>
+                      <div className="absolute top-8 left-4 w-7 h-0.5 bg-gradient-to-r from-blue-400 to-transparent animate-pulse delay-200"></div>
+                      <div className="absolute bottom-4 right-4 w-9 h-0.5 bg-gradient-to-l from-teal-400 to-transparent animate-pulse delay-500"></div>
+                    </div>
+                  </div>
                   <div className="p-4">
                     <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
                       Solar Module Manufacturing
@@ -786,11 +961,15 @@ export function ServicesSection() {
                 </div>
 
                 <div
-                  className={`content-cascade oem-card-hover oem-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
+                  id="oem-chargers-card"
+                  className={`oem-card-emerge oem-card-hover oem-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
                     isNavigating ? "opacity-50 pointer-events-none" : ""
                   }`}
-                  style={{ animationDelay: "0.4s" }}
+                  style={{ animationDelay: "0.5s" }}
                   onClick={() => handleOEMProductClick("chargers")}
+                  onMouseEnter={() =>
+                    router.prefetch("/case-study/ev-charging-station")
+                  }
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -801,22 +980,30 @@ export function ServicesSection() {
                   }}
                   aria-label="View EV charging stations case study"
                 >
-                  <img
-                    src="/ev-charging-stations-garuda.jpg"
-                    alt="Garuda EV Charging Stations"
-                    className="w-full h-40 object-cover group-hover:scale-110 group-hover:-rotate-1 transition-all duration-700 group-hover:brightness-110"
-                    loading="lazy"
-                    decoding="async"
-                    width={640}
-                    height={160}
-                    onError={(e) => {
-                      const t = e.currentTarget as HTMLImageElement;
-                      t.src = "/placeholder.jpg";
-                    }}
-                  />
+                  <div className="relative overflow-hidden">
+                    <img
+                      src="/ev-charging-stations-garuda.jpg"
+                      alt="Garuda EV Charging Stations"
+                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:-rotate-1 transition-all duration-700 group-hover:brightness-110"
+                      loading="lazy"
+                      decoding="async"
+                      width={640}
+                      height={160}
+                      onError={(e) => {
+                        const t = e.currentTarget as HTMLImageElement;
+                        t.src = "/placeholder.jpg";
+                      }}
+                    />
+                    {/* Animated Energy Lines */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute top-4 right-4 w-8 h-0.5 bg-gradient-to-l from-green-400 to-transparent animate-pulse"></div>
+                      <div className="absolute top-8 right-4 w-6 h-0.5 bg-gradient-to-l from-blue-400 to-transparent animate-pulse delay-300"></div>
+                      <div className="absolute bottom-4 left-4 w-10 h-0.5 bg-gradient-to-r from-yellow-400 to-transparent animate-pulse delay-600"></div>
+                    </div>
+                  </div>
                   <div className="p-4">
                     <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
-                      Garuda EV Charging Stations
+                      EV Charging Stations
                     </h5>
                     <p className="text-xs font-mono text-white/70 leading-relaxed">
                       Modular DC/AC chargers with smart telemetry, predictive
@@ -829,11 +1016,13 @@ export function ServicesSection() {
                 </div>
 
                 <div
-                  className={`content-cascade oem-card-hover oem-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
+                  id="oem-batteries-card"
+                  className={`oem-card-emerge oem-card-hover oem-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
                     isNavigating ? "opacity-50 pointer-events-none" : ""
                   }`}
-                  style={{ animationDelay: "0.6s" }}
+                  style={{ animationDelay: "0.7s" }}
                   onClick={() => handleOEMProductClick("batteries")}
+                  onMouseEnter={() => router.prefetch("/case-study/zinc-cells")}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -842,28 +1031,36 @@ export function ServicesSection() {
                       handleOEMProductClick("batteries");
                     }
                   }}
-                  aria-label="View zinc-ion battery technology case study"
+                  aria-label="View battery technologies case study"
                 >
-                  <img
-                    src="/solid-state-battery.png"
-                    alt="Beyond Lithium-ion: Solid State Batteries"
-                    className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
-                    loading="lazy"
-                    decoding="async"
-                    width={640}
-                    height={160}
-                    onError={(e) => {
-                      const t = e.currentTarget as HTMLImageElement;
-                      t.src = "/placeholder.jpg";
-                    }}
-                  />
+                  <div className="relative overflow-hidden">
+                    <img
+                      src="/solid-state-battery.png"
+                      alt="Advanced Battery Technologies"
+                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
+                      loading="lazy"
+                      decoding="async"
+                      width={640}
+                      height={160}
+                      onError={(e) => {
+                        const t = e.currentTarget as HTMLImageElement;
+                        t.src = "/placeholder.jpg";
+                      }}
+                    />
+                    {/* Animated Energy Lines */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute top-4 left-4 w-9 h-0.5 bg-gradient-to-r from-purple-400 to-transparent animate-pulse"></div>
+                      <div className="absolute bottom-8 right-4 w-7 h-0.5 bg-gradient-to-l from-red-400 to-transparent animate-pulse delay-400"></div>
+                      <div className="absolute bottom-4 left-8 w-8 h-0.5 bg-gradient-to-r from-orange-400 to-transparent animate-pulse delay-700"></div>
+                    </div>
+                  </div>
                   <div className="p-4">
                     <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
-                      Beyond Lithium-ion Batteries
+                      Advanced Battery Technologies
                     </h5>
                     <p className="text-xs font-mono text-white/70 leading-relaxed">
-                      Solid-state chemistries targeting higher energy density,
-                      safety, and lifecycle performance across climates.
+                      Solid-state and next-generation battery chemistries for
+                      enhanced performance and sustainability.
                     </p>
                     <p className="text-xs font-mono text-blue-400/80 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       View case study →
@@ -879,7 +1076,11 @@ export function ServicesSection() {
           {activePanel === "R & D" && (
             <div
               id="panel-r&d"
-              className="panel-slide-in border border-white/20 rounded-2xl p-8 backdrop-blur-sm bg-white/5 shadow-2xl relative overflow-hidden"
+              className="rnd-panel-drag-expand border border-white/20 rounded-2xl p-8 backdrop-blur-sm bg-white/5 shadow-2xl relative overflow-hidden"
+              style={{
+                transformOrigin: "center top",
+                animationDelay: "0.1s",
+              }}
             >
               {/* Enhanced animated background particles */}
               <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -891,6 +1092,9 @@ export function ServicesSection() {
                 <div className="particle-drift absolute top-1/3 right-1/3 w-0.5 h-0.5 bg-violet-300 rounded-full shadow-lg shadow-violet-300/50"></div>
               </div>
 
+              {/* Connection line showing drag effect */}
+              <div className="rnd-connection-line absolute -top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-white/30 to-transparent rounded-full"></div>
+
               <h3
                 className="content-cascade text-xl font-mono text-white tracking-wider mb-6 relative z-10"
                 style={{ animationDelay: "0.1s" }}
@@ -898,44 +1102,54 @@ export function ServicesSection() {
                 R & D
               </h3>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div
-                  className={`content-cascade rnd-card-hover rnd-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
+                  className={`rnd-card-emerge rnd-card-hover rnd-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
                     isNavigating ? "opacity-50 pointer-events-none" : ""
                   }`}
-                  style={{ animationDelay: "0.2s" }}
-                  onClick={() => handleRnDClick("tandem")}
+                  style={{ animationDelay: "0.5s" }}
+                  onClick={() => handleRnDClick("solar-cells")}
+                  onMouseEnter={() =>
+                    router.prefetch("/case-study/solar-cells")
+                  }
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      handleRnDClick("tandem");
+                      handleRnDClick("solar-cells");
                     }
                   }}
-                  aria-label="View tandem solar cells research details"
+                  aria-label="Learn more about advanced solar cell technologies"
                 >
-                  <img
-                    src="/tandem-solar-cells-lab-scale.jpg"
-                    alt="Lab-scale tandem solar cells"
-                    className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
-                    loading="lazy"
-                    decoding="async"
-                    width={640}
-                    height={160}
-                    onError={(e) => {
-                      const t = e.currentTarget as HTMLImageElement;
-                      t.src = "/placeholder.jpg";
-                    }}
-                  />
+                  <div className="relative overflow-hidden">
+                    <img
+                      src="/solar-cells.jpg"
+                      alt="Advanced Solar Cell Technologies"
+                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
+                      loading="lazy"
+                      decoding="async"
+                      width={640}
+                      height={160}
+                      onError={(e) => {
+                        const t = e.currentTarget as HTMLImageElement;
+                        t.src = "/placeholder.jpg";
+                      }}
+                    />
+                    {/* Animated Energy Lines */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute top-4 left-4 w-8 h-0.5 bg-gradient-to-r from-cyan-400 to-transparent animate-pulse"></div>
+                      <div className="absolute top-8 left-4 w-6 h-0.5 bg-gradient-to-r from-blue-400 to-transparent animate-pulse delay-300"></div>
+                      <div className="absolute bottom-4 right-4 w-9 h-0.5 bg-gradient-to-l from-teal-400 to-transparent animate-pulse delay-600"></div>
+                    </div>
+                  </div>
                   <div className="p-4">
                     <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
-                      Lab Scale — Tandem Solar Cells
+                      Solar Cells
                     </h5>
                     <p className="text-xs font-mono text-white/70 leading-relaxed mb-4">
-                      Stacked perovskite–silicon and perovskite–CIGS
-                      architectures targeting record efficiencies via spectral
-                      splitting.
+                      Advanced photovoltaic technologies including thin film, Si
+                      + Perovskite tandem, and c-Si solar cell research.
                     </p>
                     <p className="text-xs font-mono text-blue-400/80 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       View research details →
@@ -944,42 +1158,57 @@ export function ServicesSection() {
                 </div>
 
                 <div
-                  className="content-cascade rnd-card-hover rnd-card border border-white/15 rounded-lg p-4 cursor-pointer hover:border-white/30 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105"
-                  style={{ animationDelay: "0.4s" }}
-                  onClick={() => handleRnDClick("perovskite")}
+                  className={`rnd-card-emerge rnd-card-hover rnd-card border border-white/15 rounded-lg overflow-hidden cursor-pointer hover:border-white/30 hover:shadow-lg transition-all duration-500 group transform hover:-translate-y-2 hover:scale-105 ${
+                    isNavigating ? "opacity-50 pointer-events-none" : ""
+                  }`}
+                  style={{ animationDelay: "0.7s" }}
+                  onClick={() => handleRnDClick("zinc-batteries")}
+                  onMouseEnter={() =>
+                    router.prefetch("/case-study/zinc-batteries")
+                  }
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      handleRnDClick("perovskite");
+                      handleRnDClick("zinc-batteries");
                     }
                   }}
-                  aria-label="Learn more about perovskite crystal structures"
+                  aria-label="View zinc-ion battery technology research"
                 >
-                  <h5 className="text-sm font-mono text-white mb-3 group-hover:text-blue-300 transition-colors">
-                    Perovskite Structure
-                  </h5>
-                  <p className="text-xs font-mono text-white/70 leading-relaxed mb-4">
-                    Visualization of CH₃NH₃PbI₃ crystal structures to study
-                    defect tolerance, charge transport, and stability.
-                  </p>
-                  <div className="h-72 rounded-xl overflow-hidden border border-white/10 group-hover:border-white/20 transition-colors">
-                    <Suspense
-                      fallback={
-                        <div className="w-full h-full bg-black/20 rounded-2xl flex items-center justify-center border border-white/10">
-                          <div className="text-white font-mono text-sm tracking-wider">
-                            Loading Perovskite Structure...
-                          </div>
-                        </div>
-                      }
-                    >
-                      <Perovskite2D />
-                    </Suspense>
+                  <div className="relative overflow-hidden">
+                    <img
+                      src="/zinc-batteryinside.webp"
+                      alt="Beyond Lithium Batteries - Zinc-Ion Technology Laboratory"
+                      className="w-full h-40 object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 group-hover:brightness-110"
+                      loading="lazy"
+                      decoding="async"
+                      width={640}
+                      height={160}
+                      onError={(e) => {
+                        const t = e.currentTarget as HTMLImageElement;
+                        t.src = "/placeholder.jpg";
+                      }}
+                    />
+                    {/* Animated Energy Lines */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute top-4 right-4 w-7 h-0.5 bg-gradient-to-l from-emerald-400 to-transparent animate-pulse"></div>
+                      <div className="absolute top-8 right-4 w-5 h-0.5 bg-gradient-to-l from-green-400 to-transparent animate-pulse delay-200"></div>
+                      <div className="absolute bottom-4 left-4 w-8 h-0.5 bg-gradient-to-r from-lime-400 to-transparent animate-pulse delay-500"></div>
+                    </div>
                   </div>
-                  <p className="text-xs font-mono text-blue-400/80 mt-3 opacity-0 group-hover:opacity-100 transition-opacity text-center">
-                    Click for detailed technical information →
-                  </p>
+                  <div className="p-4">
+                    <h5 className="text-sm font-mono text-white mb-2 group-hover:text-blue-300 transition-colors">
+                      Beyond Lithium Batteries
+                    </h5>
+                    <p className="text-xs font-mono text-white/70 leading-relaxed mb-4">
+                      Advanced zinc-ion battery technology offering safer, more
+                      sustainable, and cost-effective energy storage solutions.
+                    </p>
+                    <p className="text-xs font-mono text-blue-400/80 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      View research details →
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1059,6 +1288,304 @@ export function ServicesSection() {
           }
           100% {
             left: 100%;
+          }
+        }
+        .content-cascade {
+          opacity: 0;
+          transform: translateY(20px);
+          animation: contentCascade 0.6s ease-out forwards;
+        }
+        @keyframes contentCascade {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .particle-drift {
+          animation: particleDrift 8s ease-in-out infinite;
+        }
+        @keyframes particleDrift {
+          0%,
+          100% {
+            transform: translateY(0) translateX(0);
+          }
+          25% {
+            transform: translateY(-10px) translateX(5px);
+          }
+          50% {
+            transform: translateY(0) translateX(10px);
+          }
+          75% {
+            transform: translateY(10px) translateX(5px);
+          }
+        }
+        .panel-slide-in {
+          opacity: 0;
+          transform: translateY(-10px) scale(0.98);
+          animation: panelSlideIn 450ms ease-out forwards;
+        }
+        @keyframes panelSlideIn {
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        .oem-panel-drag-expand {
+          opacity: 0;
+          transform: translateY(-100px) scaleY(0.05) scaleX(0.8);
+          animation: oemPanelDragExpand 600ms
+            cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes oemPanelDragExpand {
+          0% {
+            opacity: 0;
+            transform: translateY(-100px) scaleY(0.05) scaleX(0.8);
+            background: rgba(255, 255, 255, 0.02);
+          }
+          25% {
+            opacity: 0.3;
+            transform: translateY(-60px) scaleY(0.2) scaleX(0.85);
+            background: rgba(255, 255, 255, 0.03);
+          }
+          50% {
+            opacity: 0.6;
+            transform: translateY(-30px) scaleY(0.6) scaleX(0.92);
+            background: rgba(255, 255, 255, 0.04);
+          }
+          75% {
+            opacity: 0.85;
+            transform: translateY(-10px) scaleY(0.95) scaleX(0.98);
+            background: rgba(255, 255, 255, 0.045);
+          }
+          90% {
+            opacity: 0.95;
+            transform: translateY(-3px) scaleY(1.02) scaleX(1.01);
+            background: rgba(255, 255, 255, 0.05);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scaleY(1) scaleX(1);
+            background: rgba(255, 255, 255, 0.05);
+          }
+        }
+        .oem-card-emerge {
+          opacity: 0;
+          transform: translateY(40px) scale(0.7) rotateY(-10deg);
+          animation: oemCardDragEmerge 450ms cubic-bezier(0.34, 1.56, 0.64, 1)
+            forwards;
+        }
+        @keyframes oemCardDragEmerge {
+          0% {
+            opacity: 0;
+            transform: translateY(40px) scale(0.7) rotateY(-10deg)
+              rotateX(20deg);
+          }
+          30% {
+            opacity: 0.4;
+            transform: translateY(25px) scale(0.85) rotateY(-5deg)
+              rotateX(10deg);
+          }
+          60% {
+            opacity: 0.8;
+            transform: translateY(8px) scale(0.98) rotateY(-2deg) rotateX(2deg);
+          }
+          85% {
+            opacity: 0.95;
+            transform: translateY(-2px) scale(1.02) rotateY(1deg) rotateX(-1deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1) rotateY(0deg) rotateX(0deg);
+          }
+        }
+        .oem-connection-line {
+          height: 0;
+          animation: oemConnectionGrow 400ms ease-out 200ms forwards;
+        }
+        @keyframes oemConnectionGrow {
+          0% {
+            height: 0;
+            opacity: 0;
+          }
+          50% {
+            height: 32px;
+            opacity: 0.8;
+          }
+          100% {
+            height: 32px;
+            opacity: 0.4;
+          }
+        }
+        .epc-panel-drag-expand {
+          opacity: 0;
+          transform: translateY(-100px) scaleY(0.05) scaleX(0.8);
+          animation: epcPanelDragExpand 600ms
+            cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes epcPanelDragExpand {
+          0% {
+            opacity: 0;
+            transform: translateY(-100px) scaleY(0.05) scaleX(0.8);
+            background: rgba(255, 255, 255, 0.02);
+          }
+          25% {
+            opacity: 0.3;
+            transform: translateY(-60px) scaleY(0.2) scaleX(0.85);
+            background: rgba(255, 255, 255, 0.03);
+          }
+          50% {
+            opacity: 0.6;
+            transform: translateY(-30px) scaleY(0.6) scaleX(0.92);
+            background: rgba(255, 255, 255, 0.04);
+          }
+          75% {
+            opacity: 0.85;
+            transform: translateY(-10px) scaleY(0.95) scaleX(0.98);
+            background: rgba(255, 255, 255, 0.045);
+          }
+          90% {
+            opacity: 0.95;
+            transform: translateY(-3px) scaleY(1.02) scaleX(1.01);
+            background: rgba(255, 255, 255, 0.05);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scaleY(1) scaleX(1);
+            background: rgba(255, 255, 255, 0.05);
+          }
+        }
+        .epc-card-emerge {
+          opacity: 0;
+          transform: translateY(40px) scale(0.7) rotateY(-10deg);
+          animation: epcCardDragEmerge 450ms cubic-bezier(0.34, 1.56, 0.64, 1)
+            forwards;
+        }
+        @keyframes epcCardDragEmerge {
+          0% {
+            opacity: 0;
+            transform: translateY(40px) scale(0.7) rotateY(-10deg)
+              rotateX(20deg);
+          }
+          30% {
+            opacity: 0.4;
+            transform: translateY(25px) scale(0.85) rotateY(-5deg)
+              rotateX(10deg);
+          }
+          60% {
+            opacity: 0.8;
+            transform: translateY(8px) scale(0.98) rotateY(-2deg) rotateX(2deg);
+          }
+          85% {
+            opacity: 0.95;
+            transform: translateY(-2px) scale(1.02) rotateY(1deg) rotateX(-1deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1) rotateY(0deg) rotateX(0deg);
+          }
+        }
+        .epc-connection-line {
+          height: 0;
+          animation: epcConnectionGrow 400ms ease-out 200ms forwards;
+        }
+        @keyframes epcConnectionGrow {
+          0% {
+            height: 0;
+            opacity: 0;
+          }
+          50% {
+            height: 32px;
+            opacity: 0.8;
+          }
+          100% {
+            height: 32px;
+            opacity: 0.4;
+          }
+        }
+        .rnd-panel-drag-expand {
+          opacity: 0;
+          transform: translateY(-100px) scaleY(0.05) scaleX(0.8);
+          animation: rndPanelDragExpand 600ms
+            cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes rndPanelDragExpand {
+          0% {
+            opacity: 0;
+            transform: translateY(-100px) scaleY(0.05) scaleX(0.8);
+            background: rgba(255, 255, 255, 0.02);
+          }
+          25% {
+            opacity: 0.3;
+            transform: translateY(-60px) scaleY(0.2) scaleX(0.85);
+            background: rgba(255, 255, 255, 0.03);
+          }
+          50% {
+            opacity: 0.6;
+            transform: translateY(-30px) scaleY(0.6) scaleX(0.92);
+            background: rgba(255, 255, 255, 0.04);
+          }
+          75% {
+            opacity: 0.85;
+            transform: translateY(-10px) scaleY(0.95) scaleX(0.98);
+            background: rgba(255, 255, 255, 0.045);
+          }
+          90% {
+            opacity: 0.95;
+            transform: translateY(-3px) scaleY(1.02) scaleX(1.01);
+            background: rgba(255, 255, 255, 0.05);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scaleY(1) scaleX(1);
+            background: rgba(255, 255, 255, 0.05);
+          }
+        }
+        .rnd-card-emerge {
+          opacity: 0;
+          transform: translateY(40px) scale(0.7) rotateY(-10deg);
+          animation: rndCardDragEmerge 450ms cubic-bezier(0.34, 1.56, 0.64, 1)
+            forwards;
+        }
+        @keyframes rndCardDragEmerge {
+          0% {
+            opacity: 0;
+            transform: translateY(40px) scale(0.7) rotateY(-10deg)
+              rotateX(20deg);
+          }
+          30% {
+            opacity: 0.4;
+            transform: translateY(25px) scale(0.85) rotateY(-5deg)
+              rotateX(10deg);
+          }
+          60% {
+            opacity: 0.8;
+            transform: translateY(8px) scale(0.98) rotateY(-2deg) rotateX(2deg);
+          }
+          85% {
+            opacity: 0.95;
+            transform: translateY(-2px) scale(1.02) rotateY(1deg) rotateX(-1deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1) rotateY(0deg) rotateX(0deg);
+          }
+        }
+        .rnd-connection-line {
+          height: 0;
+          animation: rndConnectionGrow 400ms ease-out 200ms forwards;
+        }
+        @keyframes rndConnectionGrow {
+          0% {
+            height: 0;
+            opacity: 0;
+          }
+          50% {
+            height: 32px;
+            opacity: 0.8;
+          }
+          100% {
+            height: 32px;
+            opacity: 0.4;
           }
         }
         @media (max-width: 640px) {

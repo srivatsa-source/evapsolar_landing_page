@@ -29,6 +29,18 @@ const translations = {
       technology: "TECHNOLOGY",
       energy: "ENERGY",
     },
+    caseStudies: {
+      "rooftop-solar": "ROOFTOP SOLAR",
+      "ground-mounted-solar": "GROUND MOUNTED",
+      "tin-shed-solar": "TIN SHED SOLAR",
+      "garuda-charging-station": "GARUDA CHARGING",
+      "ev-charging-station": "EV CHARGING",
+      "ai-microgrid": "AI MICROGRID",
+      "zinc-cells": "ZINC CELLS",
+      "zinc-batteries": "ZINC BATTERIES",
+      "solar-cells": "SOLAR CELLS R&D",
+      "autonomous-charging": "AUTONOMOUS CHARGING",
+    },
   },
   hi: {
     sections: {
@@ -46,6 +58,18 @@ const translations = {
       technology: "तकनीक",
       energy: "ऊर्जा",
     },
+    caseStudies: {
+      "rooftop-solar": "छत पर सोलर",
+      "ground-mounted-solar": "भूमि आधारित",
+      "tin-shed-solar": "टिन शेड सोलर",
+      "garuda-charging-station": "गरुड़ चार्जिंग",
+      "ev-charging-station": "ईवी चार्जिंग",
+      "ai-microgrid": "एआई माइक्रोग्रिड",
+      "zinc-cells": "जिंक सेल",
+      "zinc-batteries": "जिंक बैटरी",
+      "solar-cells": "सोलर सेल R&D",
+      "autonomous-charging": "स्वचालित चार्जिंग",
+    },
   },
   kn: {
     sections: {
@@ -62,6 +86,18 @@ const translations = {
       evapSolar: "ಇವ್ಯಾಪ್ ಸೋಲಾರ್",
       technology: "ತಂತ್ರಜ್ಞಾನ",
       energy: "ಶಕ್ತಿ",
+    },
+    caseStudies: {
+      "rooftop-solar": "ಮೇಲ್ಮಾಳಿಗೆ ಸೌರ",
+      "ground-mounted-solar": "ನೆಲ ಆಧಾರಿತ",
+      "tin-shed-solar": "ಟಿನ್ ಶೆಡ್ ಸೌರ",
+      "garuda-charging-station": "ಗರುಡ ಚಾರ್ಜಿಂಗ್",
+      "ev-charging-station": "ಇವಿ ಚಾರ್ಜಿಂಗ್",
+      "ai-microgrid": "ಎಐ ಮೈಕ್ರೋಗ್ರಿಡ್",
+      "zinc-cells": "ಸತು ಕೋಶಗಳು",
+      "zinc-batteries": "ಸತು ಬ್ಯಾಟರಿಗಳು",
+      "solar-cells": "ಸೌರ ಕೋಶ R&D",
+      "autonomous-charging": "ಸ್ವಯಂ ಚಾರ್ಜಿಂಗ್",
     },
   },
 };
@@ -86,6 +122,20 @@ export function Navigation() {
     const savedLang = localStorage.getItem("language") || "en";
     setCurrentLang(savedLang);
     document.documentElement.lang = savedLang;
+
+    const handleLanguageChange = (event: CustomEvent) => {
+      setCurrentLang(event.detail.language);
+    };
+
+    window.addEventListener(
+      "languageChange",
+      handleLanguageChange as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        "languageChange",
+        handleLanguageChange as EventListener
+      );
   }, []);
 
   useEffect(() => {
@@ -125,7 +175,7 @@ export function Navigation() {
     handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isVisible, pathname]);
+  }, [isVisible, pathname, currentLang]);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -188,12 +238,15 @@ export function Navigation() {
     if (pathname === "/") {
       return getTranslatedSectionName(activeSection).toUpperCase();
     } else if (pathname.includes("/case-study")) {
-      const caseStudyName = pathname
-        .split("/")
-        .pop()
-        ?.replace(/-/g, " ")
-        .toUpperCase();
-      return `CASE STUDY: ${caseStudyName || "UNKNOWN"}`;
+      const caseStudyPath = pathname.split("/").pop() || "";
+
+      // Get translated case study title
+      const translatedTitle =
+        translations[currentLang as keyof typeof translations]?.caseStudies[
+          caseStudyPath as keyof typeof translations.en.caseStudies
+        ];
+
+      return translatedTitle || caseStudyPath.replace(/-/g, " ").toUpperCase();
     }
     return "PAGE";
   };
@@ -218,13 +271,9 @@ export function Navigation() {
             aria-label="Navigation"
           >
             <div className="flex items-center space-x-6">
-              <button
-                onClick={() => scrollToSection("contact", "Contact")}
-                className="text-white font-mono text-sm tracking-wider hover:text-white/70 transition-colors"
-                data-driver="contact-button"
-              >
-                CONTACT
-              </button>
+              <span className="text-white font-mono text-sm tracking-wider">
+                {getCurrentPageDisplay()}
+              </span>
               <span className="text-white/40 select-none">|</span>
               <button
                 onClick={() => setIsMenuOpen(true)}
@@ -333,6 +382,28 @@ export function Navigation() {
                       </div>
                     </motion.button>
                   ))}
+
+                  {/* Additional quick access buttons */}
+                  <motion.div
+                    className="col-span-full mt-4 pt-4 border-t border-white/10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                  >
+                    <button
+                      onClick={() => scrollToSection("contact", "Contact")}
+                      className="text-left group opacity-70 hover:opacity-100 transition-opacity"
+                    >
+                      <div className="flex items-start space-x-4">
+                        <span className="font-mono text-sm mt-1 text-white/50">
+                          →
+                        </span>
+                        <span className="text-lg font-bold tracking-wide text-white/70 group-hover:text-white transition-colors">
+                          {getTranslatedSectionName("Contact")}
+                        </span>
+                      </div>
+                    </button>
+                  </motion.div>
                 </motion.div>
 
                 <motion.div

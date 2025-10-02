@@ -126,6 +126,11 @@
   }
 }
 
+/* Custom font utilities */
+.font-orbitron {
+  font-family: var(--font-orbitron), sans-serif;
+}
+
 /* Added Matrix-style animations and effects */
 @keyframes matrix-morph {
   0%,

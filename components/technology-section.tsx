@@ -1,31 +1,37 @@
-"use client"
-import { ScrollReveal, FloatingElement } from "@/components/ui/floating-elements"
-import { Suspense, useState, useEffect } from "react"
-import dynamic from "next/dynamic"
+"use client";
+import {
+  ScrollReveal,
+  FloatingElement,
+} from "@/components/ui/floating-elements";
+import { Suspense, useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 
 const Perovskite2D = dynamic(() => import("@/components/3d/perovskite-2d"), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-96 bg-black/20 rounded-2xl flex items-center justify-center">
-      <div className="text-white font-mono text-sm tracking-wider">Loading Perovskite Structure...</div>
-    </div>
-  ),
-})
+  loading: () => <div className="w-full h-96 bg-black/20 rounded-2xl" />,
+});
 
 export function TechnologySection() {
-  const [currentLang, setCurrentLang] = useState("en")
+  const [currentLang, setCurrentLang] = useState("en");
 
   useEffect(() => {
-    const savedLang = localStorage.getItem("language") || "en"
-    setCurrentLang(savedLang)
+    const savedLang = localStorage.getItem("language") || "en";
+    setCurrentLang(savedLang);
 
     const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLang(event.detail.language)
-    }
+      setCurrentLang(event.detail.language);
+    };
 
-    window.addEventListener("languageChange", handleLanguageChange as EventListener)
-    return () => window.removeEventListener("languageChange", handleLanguageChange as EventListener)
-  }, [])
+    window.addEventListener(
+      "languageChange",
+      handleLanguageChange as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        "languageChange",
+        handleLanguageChange as EventListener
+      );
+  }, []);
 
   const translations = {
     en: {
@@ -64,17 +70,26 @@ export function TechnologySection() {
         "ಶಕ್ತಿ ಸಾಂದ್ರತೆ": "100 Wh/L",
       },
     },
-  }
+  };
 
-  const currentTranslation = translations[currentLang as keyof typeof translations] || translations.en
+  const currentTranslation =
+    translations[currentLang as keyof typeof translations] || translations.en;
 
   return (
     <section id="technology" className="min-h-screen relative bg-black">
       <div className="relative z-10 min-h-screen flex items-center py-20">
-        <FloatingElement delay={1} amplitude={8} className="absolute top-32 right-20 opacity-10">
+        <FloatingElement
+          delay={1}
+          amplitude={8}
+          className="absolute top-32 right-20 opacity-10"
+        >
           <div className="w-3 h-3 bg-white rounded-full" />
         </FloatingElement>
-        <FloatingElement delay={3} amplitude={12} className="absolute bottom-32 left-20 opacity-10">
+        <FloatingElement
+          delay={3}
+          amplitude={12}
+          className="absolute bottom-32 left-20 opacity-10"
+        >
           <div className="w-2 h-2 bg-white rounded-full" />
         </FloatingElement>
 
@@ -96,22 +111,31 @@ export function TechnologySection() {
                 </p>
 
                 <div className="space-y-6">
-                  {Object.entries(currentTranslation.specs).map(([label, value], index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center py-3 border-b border-white/10 last:border-b-0"
-                    >
-                      <span className="font-mono text-white/60 text-sm tracking-wider">{label}:</span>
-                      <span className="font-mono text-white text-sm tracking-wider">{value}</span>
-                    </div>
-                  ))}
+                  {Object.entries(currentTranslation.specs).map(
+                    ([label, value], index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center py-3 border-b border-white/10 last:border-b-0"
+                      >
+                        <span className="font-mono text-white/60 text-sm tracking-wider">
+                          {label}:
+                        </span>
+                        <span className="font-mono text-white text-sm tracking-wider">
+                          {value}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             </ScrollReveal>
 
             {/* 3D Structure - Right Side */}
             <ScrollReveal delay={0.4}>
-              <div className="h-96 lg:h-[500px] relative" data-driver="perovskite-structure">
+              <div
+                className="h-96 lg:h-[500px] relative"
+                data-driver="perovskite-structure"
+              >
                 <Suspense
                   fallback={
                     <div className="w-full h-full bg-black/20 rounded-2xl flex items-center justify-center border border-white/10">
@@ -119,8 +143,8 @@ export function TechnologySection() {
                         {currentLang === "hi"
                           ? "लोड हो रहा है..."
                           : currentLang === "kn"
-                            ? "ಲೋಡ್ ಆಗುತ್ತಿದೆ..."
-                            : "Loading Perovskite Structure..."}
+                          ? "ಲೋಡ್ ಆಗುತ್ತಿದೆ..."
+                          : "Loading Perovskite Structure..."}
                       </div>
                     </div>
                   }
@@ -135,5 +159,5 @@ export function TechnologySection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
