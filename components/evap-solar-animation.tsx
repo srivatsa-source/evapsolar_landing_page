@@ -184,7 +184,7 @@ const EvapSolarAnimation = ({
               fontSize: "clamp(2.5rem, 16vw, 6rem)",
             }}
           >
-            ES
+            es
           </div>
         </div>
 
