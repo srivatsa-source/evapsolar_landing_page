@@ -228,7 +228,7 @@ export function SavingsCalculatorSection() {
                 </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <SliderRow
                   label="System Size"
                   value={`${nfInt.format(sizeKW)} kW`}
@@ -285,7 +285,7 @@ export function SavingsCalculatorSection() {
                 </SliderRow>
 
                 <DetailsCard title="Advanced Inputs">
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     <SliderRow
                       label="Performance Ratio"
                       value={`${nfTwo.format(pr)}`}
@@ -363,37 +363,32 @@ export function SavingsCalculatorSection() {
 
           {/* Results */}
           <ScrollReveal delay={0.4}>
-            <div className="border border-foreground/20 dark:border-white/20 rounded-2xl p-6 md:p-8 backdrop-blur-sm bg-foreground/5 dark:bg-white/5">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                <div className="hidden md:block">
-                  <ResultCard
-                    label="Monthly Gen"
-                    value={`${nfInt.format(calc.monthlyGenKWh)} kWh`}
-                    icon={<Sun className="h-5 w-5" aria-hidden="true" />}
-                  />
-                </div>
+            <div className="border border-foreground/20 dark:border-white/20 rounded-2xl p-4 md:p-6 backdrop-blur-sm bg-foreground/5 dark:bg-white/5 flex flex-col h-full">
+              <h3 className="text-lg font-mono text-foreground dark:text-white mb-4">Estimated Returns</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 md:gap-4 flex-grow content-start">
+                <ResultCard
+                  label="Monthly Gen"
+                  value={`${nfInt.format(calc.monthlyGenKWh)} kWh`}
+                  icon={<Sun className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
+                />
 
-                <div className="hidden md:block">
-                  <ResultCard
-                    label="Self-Used"
-                    value={`${nfInt.format(calc.selfUsedKWh)} kWh`}
-                    icon={<Zap className="h-5 w-5" aria-hidden="true" />}
-                  />
-                </div>
+                <ResultCard
+                  label="Self-Used"
+                  value={`${nfInt.format(calc.selfUsedKWh)} kWh`}
+                  icon={<Zap className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
+                />
 
                 <ResultCard
                   label="Monthly Savings"
                   value={`₹ ${nfInt.format(calc.monthlySavings)}`}
-                  icon={<IndianRupee className="h-5 w-5" aria-hidden="true" />}
+                  icon={<IndianRupee className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
                 />
 
-                <div className="hidden md:block">
-                  <ResultCard
-                    label="Total Capex"
-                    value={`₹ ${nfInt.format(calc.totalCapex)}`}
-                    icon={<PiggyBank className="h-5 w-5" aria-hidden="true" />}
-                  />
-                </div>
+                <ResultCard
+                  label="Total Capex"
+                  value={`₹ ${nfInt.format(calc.totalCapex)}`}
+                  icon={<PiggyBank className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
+                />
 
                 <ResultCard
                   label="Payback"
@@ -402,36 +397,17 @@ export function SavingsCalculatorSection() {
                       ? "—"
                       : nfTwo.format(calc.paybackYears)
                   } yrs`}
-                  icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+                  icon={<TrendingUp className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
                 />
 
                 <ResultCard
                   label="CO₂ Saved (yr)"
                   value={`${nfTwo.format(calc.co2SavedTonsYr)} t`}
-                  icon={<Leaf className="h-5 w-5" aria-hidden="true" />}
+                  icon={<Leaf className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
                 />
               </div>
 
-              <div className="md:hidden mt-4">
-                <DetailsCard title="More metrics">
-                  <ul className="text-sm text-foreground/80 dark:text-white/80 font-mono grid gap-2">
-                    <li className="flex items-center gap-2">
-                      <Sun className="h-4 w-4" aria-hidden="true" /> Monthly
-                      Gen: {nfInt.format(calc.monthlyGenKWh)} kWh
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Zap className="h-4 w-4" aria-hidden="true" /> Self-Used:{" "}
-                      {nfInt.format(calc.selfUsedKWh)} kWh
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <PiggyBank className="h-4 w-4" aria-hidden="true" /> Total
-                      Capex: ₹ {nfInt.format(calc.totalCapex)}
-                    </li>
-                  </ul>
-                </DetailsCard>
-              </div>
-
-              <div className="mt-6 text-xs text-foreground/60 dark:text-white/60 font-mono">
+              <div className="mt-6 text-xs text-foreground/60 dark:text-white/60 font-mono text-center md:text-left">
                 Profile:{" "}
                 {profile === "business" ? "Business (C&I)" : "Residential"} •
                 Tariff: ₹ {nfTwo.format(tariff)}
@@ -466,15 +442,15 @@ function SliderRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="card p-4 md:p-5">
-      <div className="flex items-center justify-between gap-3 mb-3">
+    <div className="card p-3 md:p-4 border-foreground/15 dark:border-white/15">
+      <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 text-foreground/90 dark:text-white/90">
-          <span className="inline-flex items-center justify-center h-7 w-7 rounded-md bg-foreground/10 dark:bg-white/10 border border-foreground/15 dark:border-white/15">
+          <span className="inline-flex items-center justify-center h-6 w-6 md:h-7 md:w-7 rounded-md bg-foreground/10 dark:bg-white/10 border border-foreground/15 dark:border-white/15">
             {icon}
           </span>
-          <span className="font-mono text-sm tracking-wide">{label}</span>
+          <span className="font-mono text-xs md:text-sm tracking-wide">{label}</span>
         </div>
-        <span className="font-mono text-sm text-foreground/70 dark:text-white/70">{value}</span>
+        <span className="font-mono text-xs md:text-sm text-foreground/70 dark:text-white/70">{value}</span>
       </div>
       {children}
     </div>
@@ -491,13 +467,13 @@ function ResultCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="card p-4 flex items-center gap-3">
-      <div className="h-9 w-9 rounded-md bg-foreground/10 dark:bg-white/10 border border-foreground/15 dark:border-white/15 flex items-center justify-center">
+    <div className="card p-3 flex items-center gap-2 border-foreground/15 dark:border-white/15 bg-foreground/5 dark:bg-white/5">
+      <div className="h-8 w-8 md:h-9 md:w-9 rounded-md bg-foreground/10 dark:bg-white/10 border border-foreground/15 dark:border-white/15 flex items-center justify-center shrink-0">
         {icon}
       </div>
       <div className="min-w-0">
-        <div className="text-xs font-mono text-foreground/70 dark:text-white/70">{label}</div>
-        <div className="text-base md:text-lg font-mono text-foreground dark:text-white truncate">
+        <div className="text-[10px] md:text-xs font-mono text-foreground/70 dark:text-white/70 truncate">{label}</div>
+        <div className="text-sm md:text-base font-mono text-foreground dark:text-white font-bold truncate">
           {value}
         </div>
       </div>

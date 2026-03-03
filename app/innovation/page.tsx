@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ui/floating-elements";
 import { ArrowLeft, FlaskConical, Atom, Battery, Handshake, GraduationCap, Beaker } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const perovskiteHighlights = [
   "Higher theoretical efficiency than conventional silicon cells",
@@ -79,13 +80,13 @@ export default function InnovationPage() {
           <ScrollReveal delay={0.2}>
             <div className="border border-foreground/20 rounded-lg overflow-hidden">
               {/* Visual Placeholder */}
-              <div className="w-full h-48 md:h-64 bg-foreground/5 border-b border-foreground/10 flex items-center justify-center">
-                <div className="text-center">
-                  <Atom className="w-16 h-16 text-foreground/20 mx-auto mb-4" />
-                  <span className="text-sm font-mono text-foreground/30 tracking-wider">
-                    R&D VISUAL PLACEHOLDER
-                  </span>
-                </div>
+              <div className="w-full h-48 md:h-64 relative bg-foreground/5 border-b border-foreground/10 flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/tandem-solar-cells-lab-scale.jpg"
+                  alt="Perovskite Solar Accelerator"
+                  fill
+                  className="object-cover"
+                />
               </div>
 
               <div className="p-6 md:p-10">
@@ -140,13 +141,13 @@ export default function InnovationPage() {
           <ScrollReveal delay={0.2}>
             <div className="border border-foreground/20 rounded-lg overflow-hidden">
               {/* Visual Placeholder */}
-              <div className="w-full h-48 md:h-64 bg-foreground/5 border-b border-foreground/10 flex items-center justify-center">
-                <div className="text-center">
-                  <Battery className="w-16 h-16 text-foreground/20 mx-auto mb-4" />
-                  <span className="text-sm font-mono text-foreground/30 tracking-wider">
-                    R&D VISUAL PLACEHOLDER
-                  </span>
-                </div>
+              <div className="w-full h-48 md:h-64 relative bg-foreground/5 border-b border-foreground/10 flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/zinc-battery.jpg"
+                  alt="Zinc-Based Battery Energy Storage System"
+                  fill
+                  className="object-cover"
+                />
               </div>
 
               <div className="p-6 md:p-10">

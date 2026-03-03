@@ -115,10 +115,10 @@ export function GarudaSection() {
     translations[currentLang as keyof typeof translations] || translations.en;
 
   const carouselImages = [
-    "/ev-charging-station-with-solar-panels.jpg",
-    "/grid-free-ev-charging-network.jpg",
-    "/ai-optimized-solar-microgrid.jpg",
-    "/autonomous-ev-charging-system.jpg",
+    "/ev-charging-stations-garuda.jpg",
+    "/garudastation.png",
+    "/off-grid-ev-charging.jpg",
+    "/on-grid-ev-charging.jpg",
   ];
 
   const caseStudyRoutes = [
@@ -195,7 +195,7 @@ export function GarudaSection() {
                   {/* Image */}
                   <div className="aspect-[4/3] overflow-hidden">
                     <img
-                      src={image || "/placeholder.svg?height=300&width=400"}
+                      src={image || "/garudastation.png"}
                       alt={caseStudyTitles[index]}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
@@ -242,7 +242,7 @@ export function GarudaSection() {
               </button>
 
               <img
-                src={selectedImage.src || "/placeholder.svg"}
+                src={selectedImage.src || "/garudastation.png"}
                 alt="Case Study Preview"
                 className="w-full h-52 object-cover"
               />
