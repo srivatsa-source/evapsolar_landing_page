@@ -43,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-mono ${orbitron.variable} ${exo2.variable}`}>
+      <body className={`font-mono ${orbitron.variable} ${exo2.variable}`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

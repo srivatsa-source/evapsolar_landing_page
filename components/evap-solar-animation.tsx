@@ -6,10 +6,12 @@ const EvapSolarAnimation = ({
   onComplete,
   className = "",
   playSound = true,
+  audioContext,
 }: {
   onComplete?: () => void;
   className?: string;
   playSound?: boolean;
+  audioContext?: AudioContext;
 }) => {
   const [stage, setStage] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -17,9 +19,14 @@ const EvapSolarAnimation = ({
   onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    // Initialize Web Audio API
-    if (playSound && !audioContextRef.current) {
-      audioContextRef.current = new window.AudioContext();
+    // Prefer a pre-created AudioContext from a user-gesture handler so the
+    // browser autoplay policy never blocks it. Fall back to creating one here.
+    if (playSound) {
+      if (audioContext) {
+        audioContextRef.current = audioContext;
+      } else if (!audioContextRef.current) {
+        audioContextRef.current = new window.AudioContext();
+      }
     }
 
     // Resume AudioContext if suspended (browser autoplay policy)

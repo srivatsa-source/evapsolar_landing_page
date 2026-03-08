@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import EvapSolarAnimation from "@/components/evap-solar-animation"
 import { ScrollReveal, FloatingElement } from "@/components/ui/floating-elements"
+import { SolarPanelWireframe } from "@/components/3d/solar-panel-wireframe"
 
 const languages = [
   "EVAP SOLAR",
@@ -81,7 +82,18 @@ export function HeroSection() {
     sessionStorage.setItem("hasShownStartup", "true")
   }, [])
 
+  const audioCtxRef = useRef<AudioContext | null>(null)
+
   const handleSplashClick = useCallback(() => {
+    // Create AudioContext inside the click handler (user gesture) so the browser
+    // always starts it in the "running" state — no autoplay-policy silence.
+    if (typeof window !== "undefined" && !audioCtxRef.current) {
+      try {
+        audioCtxRef.current = new window.AudioContext()
+      } catch (_) {
+        // proceed without sound if creation fails
+      }
+    }
     setShowSplash(false)
     setShowStartup(true)
   }, [])
@@ -143,13 +155,14 @@ export function HeroSection() {
   if (showStartup) {
     return (
       <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black">
-        <EvapSolarAnimation onComplete={handleAnimationComplete} className="fixed inset-0 z-50" playSound={true} />
+        <EvapSolarAnimation onComplete={handleAnimationComplete} className="fixed inset-0 z-50" playSound={true} audioContext={audioCtxRef.current ?? undefined} />
       </section>
     )
   }
 
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background dark:bg-black">
+      <SolarPanelWireframe />
       <FloatingElement delay={0} amplitude={8} className="absolute top-20 left-10 opacity-10">
         <div className="w-1 h-1 bg-foreground dark:bg-white rounded-full" />
       </FloatingElement>
