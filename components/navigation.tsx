@@ -124,14 +124,32 @@ export function Navigation() {
       }
 
       if (pathname === "/") {
-        const scrollPosition = window.scrollY + 200;
-        const contactSection = document.getElementById("contact");
+        const homeSections = [
+          { id: "home", label: "Home" },
+          { id: "who-we-are", label: "Who We Are" },
+          { id: "services", label: "Services" },
+          { id: "garuda", label: "Garuda" },
+          { id: "sustainability", label: "Sustainability" },
+          { id: "focus-areas", label: "Focus Areas" },
+          { id: "evap-difference", label: "EVAP Difference" },
+          { id: "impact-stats", label: "Impact" },
+          { id: "dual-cta", label: "Get Started" },
+          { id: "calculator", label: "Savings Calculator" },
+          { id: "contact", label: "Contact" },
+        ];
 
-        if (contactSection && contactSection.offsetTop <= scrollPosition) {
-          setActiveSection("Contact");
-        } else {
-          setActiveSection("Home");
+        const windowHeight = window.innerHeight;
+        let current = "Home";
+        for (const sec of homeSections) {
+          const el = document.getElementById(sec.id);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= windowHeight * 0.45 && rect.bottom > windowHeight * 0.15) {
+              current = sec.label;
+            }
+          }
         }
+        setActiveSection(current);
       } else if (pathname === "/about") {
         setActiveSection("About Us");
       } else if (pathname === "/products") {
