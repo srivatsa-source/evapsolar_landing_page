@@ -20,16 +20,16 @@ export default function Home() {
       <Navigation />
       <SectionNav />
       <HeroSection />
-      <InnovationSection />
+      <WhoWeAreSection />
       <ServicesSection />
       <GarudaSection />
+      <InnovationSection />
       <SustainabilitySection />
-      <SavingsCalculatorSection />
-      <WhoWeAreSection />
       <FocusAreasSection />
       <EvapDifferenceSection />
       <ImpactStatsSection />
       <DualCtaSection />
+      <SavingsCalculatorSection />
       <ContactSection />
       <Footer />
     </main>

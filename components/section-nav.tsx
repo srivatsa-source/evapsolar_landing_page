@@ -10,15 +10,15 @@ interface Section {
 
 const sections: Section[] = [
   { id: "home", label: "Home" },
+  { id: "who-we-are", label: "Who We Are" },
   { id: "services", label: "Services" },
   { id: "garuda", label: "Garuda" },
   { id: "sustainability", label: "Sustainability" },
-  { id: "calculator", label: "Calculator" },
-  { id: "who-we-are", label: "Who We Are" },
   { id: "focus-areas", label: "Focus Areas" },
   { id: "evap-difference", label: "EVAP Difference" },
   { id: "impact-stats", label: "Impact" },
   { id: "dual-cta", label: "Get Started" },
+  { id: "calculator", label: "Calculator" },
   { id: "contact", label: "Contact" },
 ]
 

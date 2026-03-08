@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
 import EvapSolarAnimation from "@/components/evap-solar-animation"
 import { ScrollReveal, FloatingElement } from "@/components/ui/floating-elements"
 
@@ -160,6 +161,18 @@ export function HeroSection() {
       </FloatingElement>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
+        <ScrollReveal delay={0.1}>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/evap logo.avif"
+              alt="EVAP Solar Logo"
+              width={100}
+              height={100}
+              className="grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500 object-contain"
+            />
+          </div>
+        </ScrollReveal>
+
         <ScrollReveal delay={0.2}>
           {/* Language cycling accent */}
           <AnimatePresence mode="wait">

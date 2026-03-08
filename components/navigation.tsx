@@ -11,7 +11,8 @@ const sections = [
   { name: "Home", id: "home", route: "/" },
   { name: "About Us", id: "about", route: "/about" },
   { name: "Products", id: "products", route: "/products" },
-  { name: "Innovation", id: "innovation", route: "/innovation" },
+  { name: "Innovation Pipeline", id: "innovation", route: "/innovation" },
+  { name: "Savings Calculator", id: "calculator", route: "/#calculator" },
   { name: "Contact", id: "contact", route: "/#contact" },
 ];
 
@@ -21,17 +22,18 @@ const translations = {
       Home: "Home",
       "About Us": "About Us",
       Products: "Products",
-      Innovation: "Innovation",
+      "Innovation Pipeline": "Innovation Pipeline",
+      "Savings Calculator": "Savings Calculator",
       Contact: "Contact",
     },
     content: {
       menu: "MENU",
       evapSolar: "EVAP SOLAR",
       energy: "ENERGY",
-      exploreEV: "Explore EV Charging",
-      solarInstall: "Solar Installation",
-      innovationPipeline: "Innovation Pipeline",
-      rdCollab: "R&D Collaboration",
+      evCharging: "EV Charging",
+      engIntegrated: "Engineering Integrated Systems",
+      perovskites: "Perovskites",
+      zincBatteries: "Zinc Batteries",
     },
   },
   hi: {
@@ -39,17 +41,18 @@ const translations = {
       Home: "होम",
       "About Us": "हमारे बारे में",
       Products: "उत्पाद",
-      Innovation: "नवाचार",
+      "Innovation Pipeline": "नवाचार पाइपलाइन",
+      "Savings Calculator": "बचत कैलकुलेटर",
       Contact: "संपर्क",
     },
     content: {
       menu: "मेनू",
       evapSolar: "ईवैप सोलर",
       energy: "ऊर्जा",
-      exploreEV: "ईवी चार्जिंग देखें",
-      solarInstall: "सोलर इंस्टालेशन",
-      innovationPipeline: "नवाचार पाइपलाइन",
-      rdCollab: "R&D सहयोग",
+      evCharging: "ईवी चार्जिंग",
+      engIntegrated: "इंजीनियरिंग इंटीग्रेटेड सिस्टम",
+      perovskites: "पेरोव्स्काइट्स",
+      zincBatteries: "जिंक बैटरी",
     },
   },
   kn: {
@@ -57,17 +60,18 @@ const translations = {
       Home: "ಮನೆ",
       "About Us": "ನಮ್ಮ ಬಗ್ಗೆ",
       Products: "ಉತ್ಪನ್ನಗಳು",
-      Innovation: "ನಾವೀನ್ಯತೆ",
+      "Innovation Pipeline": "ನಾವೀನ್ಯತೆ ಪೈಪ್‌ಲೈನ್",
+      "Savings Calculator": "ಉಳಿತಾಯ ಕ್ಯಾಲ್ಕುಲೇಟರ್",
       Contact: "ಸಂಪರ್ಕ",
     },
     content: {
       menu: "ಮೆನು",
       evapSolar: "ಇವ್ಯಾಪ್ ಸೋಲಾರ್",
       energy: "ಶಕ್ತಿ",
-      exploreEV: "ಇವಿ ಚಾರ್ಜಿಂಗ್ ಅನ್ವೇಷಿಸಿ",
-      solarInstall: "ಸೋಲಾರ್ ಅಳವಡಿಕೆ",
-      innovationPipeline: "ನಾವೀನ್ಯತೆ ಪೈಪ್‌ಲೈನ್",
-      rdCollab: "R&D ಸಹಯೋಗ",
+      evCharging: "ಇವಿ ಚಾರ್ಜಿಂಗ್",
+      engIntegrated: "ಎಂಜಿನಿಯರಿಂಗ್ ಇಂಟಿಗ್ರೇಟೆಡ್ ಸಿಸ್ಟಮ್",
+      perovskites: "ಪೆರೋವ್ಸ್ಕೈಟ್ಸ್",
+      zincBatteries: "ಜಿಂಕ್ ಬ್ಯಾಟರಿಗಳು",
     },
   },
 };
@@ -133,7 +137,7 @@ export function Navigation() {
       } else if (pathname === "/products") {
         setActiveSection("Products");
       } else if (pathname === "/innovation") {
-        setActiveSection("Innovation");
+        setActiveSection("Innovation Pipeline");
       } else if (pathname.includes("/case-study")) {
         setActiveSection("Products");
       }
@@ -158,6 +162,20 @@ export function Navigation() {
   const navigateTo = (section: (typeof sections)[number]) => {
     setActiveSection(section.name);
     setIsMenuOpen(false);
+
+    if (section.name === "Savings Calculator") {
+      if (pathname !== "/") {
+        window.location.href = "/#calculator";
+      } else {
+        const element = document.getElementById("calculator");
+        if (element) {
+          const headerOffset = 80;
+          const elementPosition = element.offsetTop - headerOffset;
+          window.scrollTo({ top: elementPosition, behavior: "smooth" });
+        }
+      }
+      return;
+    }
 
     if (section.name === "Contact") {
       if (pathname !== "/") {
@@ -209,7 +227,7 @@ export function Navigation() {
     } else if (pathname === "/products") {
       return getTranslatedSectionName("Products").toUpperCase();
     } else if (pathname === "/innovation") {
-      return getTranslatedSectionName("Innovation").toUpperCase();
+      return getTranslatedSectionName("Innovation Pipeline").toUpperCase();
     } else if (pathname.includes("/case-study")) {
       const caseStudyPath = pathname.split("/").pop() || "";
       return caseStudyPath.replace(/-/g, " ").toUpperCase();
@@ -374,7 +392,7 @@ export function Navigation() {
                     }}
                     className="px-3 py-2 rounded-md border border-foreground/20 text-foreground/80 hover:text-foreground hover:bg-foreground/5 font-mono text-[11px] sm:text-xs tracking-wider transition-colors"
                   >
-                    {getTranslatedContent("exploreEV")}
+                    {getTranslatedContent("evCharging")}
                   </button>
                   <button
                     onClick={() => {
@@ -383,25 +401,25 @@ export function Navigation() {
                     }}
                     className="px-3 py-2 rounded-md border border-foreground/20 text-foreground/80 hover:text-foreground hover:bg-foreground/5 font-mono text-[11px] sm:text-xs tracking-wider transition-colors"
                   >
-                    {getTranslatedContent("solarInstall")}
+                    {getTranslatedContent("engIntegrated")}
                   </button>
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      router.push("/innovation");
+                      router.push("/innovation#perovskite");
                     }}
                     className="px-3 py-2 rounded-md border border-foreground/20 text-foreground/80 hover:text-foreground hover:bg-foreground/5 font-mono text-[11px] sm:text-xs tracking-wider transition-colors"
                   >
-                    {getTranslatedContent("innovationPipeline")}
+                    {getTranslatedContent("perovskites")}
                   </button>
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      router.push("/innovation#collaboration");
+                      router.push("/innovation#zinc-battery");
                     }}
                     className="px-3 py-2 rounded-md border border-foreground/20 text-foreground/80 hover:text-foreground hover:bg-foreground/5 font-mono text-[11px] sm:text-xs tracking-wider transition-colors"
                   >
-                    {getTranslatedContent("rdCollab")}
+                    {getTranslatedContent("zincBatteries")}
                   </button>
                 </motion.div>
               </div>

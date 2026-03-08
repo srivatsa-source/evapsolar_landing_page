@@ -74,6 +74,87 @@ export default function InnovationPage() {
         </motion.div>
       </section>
 
+      {/* Three-Phase Technology Roadmap */}
+      <section id="roadmap" className="py-16 md:py-24 border-t border-foreground/10 scroll-mt-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <ScrollReveal delay={0.1}>
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-mono font-bold text-foreground mb-4">
+                Beyond the Flagship: Our Three-Phase Technology Roadmap
+              </h2>
+              <p className="text-sm md:text-base font-mono text-foreground/50 max-w-2xl mx-auto leading-relaxed">
+                Every EVAP Solar product today is designed to integrate seamlessly with next-generation technologies we are building in parallel.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Phase 1 */}
+            <ScrollReveal delay={0.2}>
+              <div className="border border-foreground/20 rounded-lg p-6 bg-foreground/[0.02] flex flex-col h-full">
+                <div className="mb-4">
+                  <span className="text-xs font-mono text-purple-500 dark:text-purple-400 tracking-wider">PHASE 01</span>
+                  <h3 className="text-lg font-mono font-bold text-foreground mt-2">
+                    Perovskite Solar Cells
+                  </h3>
+                </div>
+                <p className="text-sm font-mono text-foreground/55 leading-relaxed flex-1">
+                  Next-generation solar cells that are lighter, cheaper, and more efficient than conventional silicon. Targeting building-integrated photovoltaics and portable applications through joint development with NISE-affiliated labs.
+                </p>
+                <div className="mt-4 pt-4 border-t border-foreground/10">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-mono text-foreground/40 tracking-wider">Active R&amp;D · Target: 2026</span>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Phase 2 */}
+            <ScrollReveal delay={0.35}>
+              <div className="border border-foreground/20 rounded-lg p-6 bg-foreground/[0.02] flex flex-col h-full">
+                <div className="mb-4">
+                  <span className="text-xs font-mono text-cyan-500 dark:text-cyan-400 tracking-wider">PHASE 02</span>
+                  <h3 className="text-lg font-mono font-bold text-foreground mt-2">
+                    Zinc-Based Battery Storage
+                  </h3>
+                </div>
+                <p className="text-sm font-mono text-foreground/55 leading-relaxed flex-1">
+                  A proprietary zinc-ion energy storage system — safer, greener, and more cost-effective than lithium-ion. Designed for long-duration stationary storage using abundantly available materials.
+                </p>
+                <div className="mt-4 pt-4 border-t border-foreground/10">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-mono text-foreground/40 tracking-wider">Early Development · Target: 2028</span>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Phase 3 */}
+            <ScrollReveal delay={0.5}>
+              <div className="border border-foreground/20 rounded-lg p-6 bg-foreground/[0.02] flex flex-col h-full">
+                <div className="mb-4">
+                  <span className="text-xs font-mono text-green-500 dark:text-green-400 tracking-wider">PHASE 03</span>
+                  <h3 className="text-lg font-mono font-bold text-foreground mt-2">
+                    Fully Integrated Energy Platform
+                  </h3>
+                </div>
+                <p className="text-sm font-mono text-foreground/55 leading-relaxed flex-1">
+                  The convergence of our flagship EV charging system, perovskite generation, and zinc battery storage into a single, fully autonomous, renewable-powered energy platform — ready for India&apos;s next decade.
+                </p>
+                <div className="mt-4 pt-4 border-t border-foreground/10">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-foreground/20 rounded-full" />
+                    <span className="text-xs font-mono text-foreground/40 tracking-wider">Planned · Target: 2030</span>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
       {/* Pipeline 1: Perovskite Solar Accelerator */}
       <section id="perovskite" className="py-20 md:py-28 scroll-mt-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
